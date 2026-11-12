@@ -421,6 +421,28 @@ class Component extends DCLogic {
     for (let i = 0; i < w * h; i++) if (rm[i]) a[i * 4 + 3] = 0;
     edge.forEach((i) => { a[i * 4 + 3] = 140; });
     x.putImageData(d, 0, 0);
+    // Normalise garment size: crop to the garment's bounding box, then scale it to fill the same share of the frame for every product.
+    try {
+      const cc = new Int32Array(w), rc = new Int32Array(h);
+      for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) { if (a[(j * w + i) * 4 + 3] > 40) { cc[i]++; rc[j]++; } }
+      const tc = Math.max(3, Math.round(h * 0.004)), tr = Math.max(3, Math.round(w * 0.004));
+      let x0 = 0, x1 = w - 1, y0 = 0, y1 = h - 1;
+      while (x0 < x1 && cc[x0] < tc) x0++;
+      while (x1 > x0 && cc[x1] < tc) x1--;
+      while (y0 < y1 && rc[y0] < tr) y0++;
+      while (y1 > y0 && rc[y1] < tr) y1--;
+      const bw = x1 - x0 + 1, bh = y1 - y0 + 1;
+      if (bw > w * 0.15 && bh > h * 0.15) {
+        const sc = Math.min(w * 0.84 / bw, h * 0.84 / bh, 2.4);
+        const dw = Math.round(bw * sc), dh = Math.round(bh * sc);
+        const o = document.createElement('canvas');
+        o.width = w; o.height = h;
+        const ox = o.getContext('2d');
+        ox.imageSmoothingEnabled = true; ox.imageSmoothingQuality = 'high';
+        ox.drawImage(c, x0, y0, bw, bh, Math.round((w - dw) / 2), Math.round((h - dh) / 2), dw, dh);
+        return o;
+      }
+    } catch (e) {}
     return c;
   }
 
@@ -2823,6 +2845,28 @@ class Component extends DCLogic {
     for (let i = 0; i < w * h; i++) if (rm[i]) a[i * 4 + 3] = 0;
     edge.forEach((i) => { a[i * 4 + 3] = 140; });
     x.putImageData(d, 0, 0);
+    // Normalise garment size: crop to the garment's bounding box, then scale it to fill the same share of the frame for every product.
+    try {
+      const cc = new Int32Array(w), rc = new Int32Array(h);
+      for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) { if (a[(j * w + i) * 4 + 3] > 40) { cc[i]++; rc[j]++; } }
+      const tc = Math.max(3, Math.round(h * 0.004)), tr = Math.max(3, Math.round(w * 0.004));
+      let x0 = 0, x1 = w - 1, y0 = 0, y1 = h - 1;
+      while (x0 < x1 && cc[x0] < tc) x0++;
+      while (x1 > x0 && cc[x1] < tc) x1--;
+      while (y0 < y1 && rc[y0] < tr) y0++;
+      while (y1 > y0 && rc[y1] < tr) y1--;
+      const bw = x1 - x0 + 1, bh = y1 - y0 + 1;
+      if (bw > w * 0.15 && bh > h * 0.15) {
+        const sc = Math.min(w * 0.84 / bw, h * 0.84 / bh, 2.4);
+        const dw = Math.round(bw * sc), dh = Math.round(bh * sc);
+        const o = document.createElement('canvas');
+        o.width = w; o.height = h;
+        const ox = o.getContext('2d');
+        ox.imageSmoothingEnabled = true; ox.imageSmoothingQuality = 'high';
+        ox.drawImage(c, x0, y0, bw, bh, Math.round((w - dw) / 2), Math.round((h - dh) / 2), dw, dh);
+        return o;
+      }
+    } catch (e) {}
     return c;
   }
 
