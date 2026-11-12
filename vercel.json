@@ -1,15 +1,53 @@
 {
   "version": 2,
   "builds": [
-    { "src": "checkout.js", "use": "@vercel/node" },
-    { "src": "orders.js", "use": "@vercel/node" },
-    { "src": "index.html", "use": "@vercel/static" },
-    { "src": "orders.html", "use": "@vercel/static" }
+    {
+      "src": "checkout.js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "orders.js",
+      "use": "@vercel/node",
+      "config": {
+        "includeFiles": "mail.js"
+      }
+    },
+    {
+      "src": "stripe-webhook.js",
+      "use": "@vercel/node",
+      "config": {
+        "includeFiles": "mail.js"
+      }
+    },
+    {
+      "src": "index.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "orders.html",
+      "use": "@vercel/static"
+    }
   ],
   "routes": [
-    { "src": "/api/checkout", "dest": "/checkout.js" },
-    { "src": "/api/orders", "dest": "/orders.js" },
-    { "src": "/orders", "dest": "/orders.html" },
-    { "src": "/", "dest": "/index.html" }
+    {
+      "src": "/api/checkout",
+      "dest": "/checkout.js"
+    },
+    {
+      "src": "/api/orders",
+      "dest": "/orders.js"
+    },
+    {
+      "src": "/api/stripe-webhook",
+      "dest": "/stripe-webhook.js"
+    },
+    {
+      "src": "/orders",
+      "dest": "/orders.html"
+    },
+    {
+      "src": "/",
+      "dest": "/index.html"
+    }
   ]
 }

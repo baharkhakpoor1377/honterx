@@ -1,6 +1,7 @@
 // Høntérx order desk: reads paid orders straight from Stripe (no database needed).
 // Protected by the ADMIN_PASSWORD environment variable set in Vercel.
 const crypto = require('crypto');
+const mail = require('./mail.js');
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 function same(a, b) {
@@ -30,11 +31,31 @@ module.exports = async (req, res) => {
     if (body.action === 'ship') {
       const pi = String(body.pi || '');
       if (!/^pi_[A-Za-z0-9_]+$/.test(pi)) return res.status(400).json({ error: 'Bad order.' });
+      const tracking = String(body.tracking || '').trim().slice(0, 60);
+      const carrier = Object.keys(mail.CARRIERS).concat(['Other']).includes(body.carrier) ? body.carrier : 'Other';
+      let email = 'not requested';
       const p = new URLSearchParams();
-      if (body.shipped) { p.append('metadata[shipped]', '1'); p.append('metadata[shipped_at]', new Date().toISOString()); }
-      else { p.append('metadata[shipped]', ''); p.append('metadata[shipped_at]', ''); }
+      if (body.shipped) {
+        p.append('metadata[shipped]', '1'); p.append('metadata[shipped_at]', new Date().toISOString());
+        if (tracking) { p.append('metadata[tracking]', tracking); p.append('metadata[carrier]', carrier); }
+        if (body.notify) {
+          try {
+            const found = await stripe('/checkout/sessions?payment_intent=' + pi + '&limit=1');
+            const sid = found.data && found.data[0] && found.data[0].id;
+            if (!sid) { email = 'Could not find the order to email.'; }
+            else {
+              const o = await mail.loadOrder(stripe, sid);
+              if (o.meta.shipped_email === '1') email = 'already sent earlier';
+              else {
+                const r = await mail.send(o.email, mail.shipped(o, tracking, carrier));
+                if (r.sent) { email = 'sent'; p.append('metadata[shipped_email]', '1'); } else email = r.skipped;
+              }
+            }
+          } catch (e) { email = 'Email failed: ' + (e && e.message ? e.message : 'unknown error'); }
+        }
+      } else { p.append('metadata[shipped]', ''); p.append('metadata[shipped_at]', ''); }
       await stripe('/payment_intents/' + pi, { method: 'POST', body: p });
-      return res.status(200).json({ ok: true });
+      return res.status(200).json({ ok: true, email });
     }
 
     const list = await stripe('/checkout/sessions?limit=100&expand[]=data.payment_intent');
@@ -67,6 +88,10 @@ module.exports = async (req, res) => {
         total: (s.amount_total || 0) / 100,
         currency: String(s.currency || '').toUpperCase(),
         shipped: md.shipped === '1',
+        tracking: md.tracking || '',
+        carrier: md.carrier || '',
+        thanked: md.thanks_sent === '1',
+        shippedEmail: md.shipped_email === '1',
         shippedAt: md.shipped_at || ''
       };
     }));

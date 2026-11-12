@@ -28,7 +28,7 @@ table{width:100%;border-collapse:collapse}td{padding:5px 0;border-bottom:1px sol
 .size{display:inline-block;margin-left:6px;padding:1px 8px;border-radius:6px;background:var(--bg);border:1px solid var(--line);font-weight:700;font-size:13px}
 .acts{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between}.acts .l{display:flex;gap:8px;flex-wrap:wrap}
 .total{font-weight:800;font-size:17px}
-.empty{text-align:center;color:var(--mut);padding:50px 0}
+.shipf{flex:1 1 100%;display:flex;flex-direction:column;gap:8px;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px;order:3}.shipf input[type=text],.shipf select{font:inherit;color:var(--fg);background:var(--card);border:1px solid var(--line);border-radius:10px;padding:9px 11px;min-width:0}.chk{display:flex;gap:6px;align-items:center;font-size:14px}.frow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.fmsg{color:var(--bad);font-size:13px}.empty{text-align:center;color:var(--mut);padding:50px 0}
 a{color:inherit}
 @media (max-width:640px){.order{grid-template-columns:minmax(0,1fr)}}
 @media print{body{background:#fff;color:#000;padding:0}.bar,.stats,.acts,.login,.tabs{display:none!important}.order{break-inside:avoid;border:1px solid #999}}
@@ -51,6 +51,15 @@ function when(ms){return new Date(ms).toLocaleString('en-CA',{timeZone:'America/
 function addrText(o){var a=o.address,l=[o.name,a.line1,a.line2,[a.city,a.state,a.postal_code].filter(Boolean).join(' '),a.country].filter(Boolean);return l.join('\n')}
 function allText(o){var L=['ORDER '+when(o.created),'Status: '+(o.paid?'PAID':'NOT PAID')+(o.shipped?' / SHIPPED':''),'','SHIP TO',addrText(o)||'(no address)','','CONTACT','Email: '+(o.email||'-'),'Phone: '+(o.phone||'-'),'','ITEMS'];o.items.forEach(function(i){L.push('- '+i.name+(i.size?' | Size '+i.size:'')+' | Qty '+i.qty)});L.push('','Total paid: '+money(o),'Order ID: '+o.id);return L.join('\n')}
 function copy(t,btn){var done=function(){var o=btn.textContent;btn.textContent='Copied';setTimeout(function(){btn.textContent=o},1200)};try{navigator.clipboard.writeText(t).then(done,function(){fallback()})}catch(e){fallback()}function fallback(){var ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');done()}catch(e){}ta.remove()}}
+function shipForm(o,card,btn){
+  var f=el('div','shipf');
+  var tr=document.createElement('input');tr.type='text';tr.placeholder='Tracking number (optional)';tr.setAttribute('aria-label','Tracking number');
+  var cs=document.createElement('select');cs.setAttribute('aria-label','Carrier');['Canada Post','UPS','FedEx','USPS','DHL','Purolator','Other'].forEach(function(n){var op=document.createElement('option');op.textContent=n;cs.appendChild(op)});
+  var lb=document.createElement('label');lb.className='chk';var cb=document.createElement('input');cb.type='checkbox';cb.checked=!!o.email&&!o.shippedEmail;cb.disabled=!o.email;lb.appendChild(cb);lb.appendChild(document.createTextNode(o.email?' Email '+o.email+' that it shipped':' No email on this order'));
+  var go=el('button','pri','Confirm shipped'),no=el('button',0,'Cancel'),msg=el('span','fmsg','');
+  no.onclick=function(){f.remove();btn.hidden=false};
+  go.onclick=function(){go.disabled=true;msg.textContent='Saving…';post({action:'ship',pi:o.pi,shipped:true,notify:cb.checked,tracking:tr.value,carrier:cs.value}).then(function(d){o.shipped=true;o.tracking=tr.value;o.carrier=cs.value;if(cb.checked)alert('Marked as shipped. Customer email: '+d.email);stats();show()}).catch(function(e){msg.textContent=e.message;go.disabled=false})};
+  f.appendChild(tr);f.appendChild(cs);f.appendChild(lb);var r=el('div','frow');r.appendChild(go);r.appendChild(no);r.appendChild(msg);f.appendChild(r);return f}
 function show(){
   var q=$('q').value.trim().toLowerCase();
   var rows=ORDERS.filter(function(o){
@@ -65,7 +74,7 @@ function show(){
     var c=el('article','order'),h=el('header'),lw=el('div');lw.appendChild(el('div','when',when(o.created)));lw.appendChild(el('div','oid',o.id.slice(0,24)+'…'));h.appendChild(lw);
     var ch=el('div','chips');ch.appendChild(el('span','chip '+(o.paid?'c-ok':'c-bad'),o.paid?'Paid':'Not paid'));ch.appendChild(el('span','chip '+(o.shipped?'c-blue':(o.paid?'c-warn':'c-bad')),o.shipped?'Shipped':(o.paid?'To ship':'Hold')));h.appendChild(ch);c.appendChild(h);
     var a=el('div','col');a.appendChild(el('h3',0,'Ship to'));a.appendChild(el('p','addr',addrText(o)||'No address'));
-    var ct=el('div','col');ct.appendChild(el('h3',0,'Contact'));ct.appendChild(el('p',0,o.email||'No email'));ct.appendChild(el('p',0,o.phone||'No phone'));
+    var ct=el('div','col');ct.appendChild(el('h3',0,'Contact'));ct.appendChild(el('p',0,o.email||'No email'));ct.appendChild(el('p',0,o.phone||'No phone'));if(o.tracking){ct.appendChild(el('p',0,'Tracking: '+o.carrier+' '+o.tracking))}ct.appendChild(el('p','oid','Thank-you email: '+(o.thanked?'sent':'not sent')+(o.shipped?' · Shipped email: '+(o.shippedEmail?'sent':'not sent'):'')));
     var w=el('div');w.style.display='contents';
     var l=el('div','col');l.style.gridColumn='1/-1';l.appendChild(el('h3',0,'Items'));var t=document.createElement('table');
     o.items.forEach(function(i){var r=t.insertRow(),d=r.insertCell();d.appendChild(document.createTextNode(i.name));if(i.size)d.appendChild(el('span','size','Size '+i.size));r.insertCell().textContent='× '+i.qty});
@@ -75,7 +84,9 @@ function show(){
     var ab=el('button','pri2','Copy all info');ab.onclick=function(){copy(allText(o),ab)};lf.appendChild(ab);var cb=el('button',0,'Copy address');cb.onclick=function(){copy(addrText(o),cb)};lf.appendChild(cb);
     var pb=el('button',0,'Print this order');pb.onclick=function(){document.querySelectorAll('.order').forEach(function(n){n.style.display=n===c?'':'none'});window.print();setTimeout(function(){document.querySelectorAll('.order').forEach(function(n){n.style.display=''})},300)};lf.appendChild(pb);
     ac.appendChild(lf);
-    if(o.paid&&o.pi){var sb=el('button',o.shipped?'':'pri',o.shipped?'Undo shipped':'Mark as shipped');sb.onclick=function(){sb.disabled=true;post({action:'ship',pi:o.pi,shipped:!o.shipped}).then(function(){o.shipped=!o.shipped;stats();show()}).catch(function(e){alert(e.message);sb.disabled=false})};ac.appendChild(sb)}
+    if(o.paid&&o.pi){
+      if(o.shipped){var ub=el('button',0,'Undo shipped');ub.onclick=function(){ub.disabled=true;post({action:'ship',pi:o.pi,shipped:false}).then(function(){o.shipped=false;stats();show()}).catch(function(e){alert(e.message);ub.disabled=false})};ac.appendChild(ub)}
+      else{var sb=el('button','pri','Mark as shipped');sb.onclick=function(){sb.hidden=true;ac.appendChild(shipForm(o,c,sb))};ac.appendChild(sb)}}
     c.appendChild(ac);L.appendChild(c)})}
 function stats(){
   var paid=ORDERS.filter(function(o){return o.paid}),ts=paid.filter(function(o){return !o.shipped}),rev={};paid.forEach(function(o){rev[o.currency]=(rev[o.currency]||0)+o.total});
