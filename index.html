@@ -340,7 +340,11 @@ function morph(a,b){ // patch a to look like b
   for(const at of [...a.attributes])if(!b.hasAttribute(at.name))a.removeAttribute(at.name);
   for(const at of b.attributes)if(a.getAttribute(at.name)!==at.value)a.setAttribute(at.name,at.value);
   if(b._h&&Object.keys(b._h).length)bind(a);
-  const ac=[...a.childNodes],bc=[...b.childNodes];
+  const isOv=n=>n.nodeType===1&&n.nodeName==='DIV'&&/z-index:\s*70/.test(n.getAttribute('style')||'')&&/position:\s*fixed/.test(n.getAttribute('style')||'');
+  let ac=[...a.childNodes],bc=[...b.childNodes];
+  const oa=ac.find(isOv),ob=bc.find(isOv);
+  if(oa||ob){ac=ac.filter(n=>n!==oa);bc=bc.filter(n=>n!==ob);
+   if(oa&&ob)morph(oa,ob);else if(ob){a.appendChild(ob);bind2(ob);}else if(oa)a.removeChild(oa);}
   for(let i=0;i<bc.length;i++){
    if(!ac[i])a.appendChild(bc[i]),bind2(bc[i]);
    else if(ac[i].nodeType!==bc[i].nodeType||ac[i].nodeName!==bc[i].nodeName){a.replaceChild(bc[i],ac[i]);bind2(bc[i]);}
@@ -1994,7 +1998,11 @@ function morph(a,b){ // patch a to look like b
   for(const at of [...a.attributes])if(!b.hasAttribute(at.name))a.removeAttribute(at.name);
   for(const at of b.attributes)if(a.getAttribute(at.name)!==at.value)a.setAttribute(at.name,at.value);
   if(b._h&&Object.keys(b._h).length)bind(a);
-  const ac=[...a.childNodes],bc=[...b.childNodes];
+  const isOv=n=>n.nodeType===1&&n.nodeName==='DIV'&&/z-index:\s*70/.test(n.getAttribute('style')||'')&&/position:\s*fixed/.test(n.getAttribute('style')||'');
+  let ac=[...a.childNodes],bc=[...b.childNodes];
+  const oa=ac.find(isOv),ob=bc.find(isOv);
+  if(oa||ob){ac=ac.filter(n=>n!==oa);bc=bc.filter(n=>n!==ob);
+   if(oa&&ob)morph(oa,ob);else if(ob){a.appendChild(ob);bind2(ob);}else if(oa)a.removeChild(oa);}
   for(let i=0;i<bc.length;i++){
    if(!ac[i])a.appendChild(bc[i]),bind2(bc[i]);
    else if(ac[i].nodeType!==bc[i].nodeType||ac[i].nodeName!==bc[i].nodeName){a.replaceChild(bc[i],ac[i]);bind2(bc[i]);}
@@ -2698,7 +2706,11 @@ function morph(a,b){ // patch a to look like b
   for(const at of [...a.attributes])if(!b.hasAttribute(at.name))a.removeAttribute(at.name);
   for(const at of b.attributes)if(a.getAttribute(at.name)!==at.value)a.setAttribute(at.name,at.value);
   if(b._h&&Object.keys(b._h).length)bind(a);
-  const ac=[...a.childNodes],bc=[...b.childNodes];
+  const isOv=n=>n.nodeType===1&&n.nodeName==='DIV'&&/z-index:\s*70/.test(n.getAttribute('style')||'')&&/position:\s*fixed/.test(n.getAttribute('style')||'');
+  let ac=[...a.childNodes],bc=[...b.childNodes];
+  const oa=ac.find(isOv),ob=bc.find(isOv);
+  if(oa||ob){ac=ac.filter(n=>n!==oa);bc=bc.filter(n=>n!==ob);
+   if(oa&&ob)morph(oa,ob);else if(ob){a.appendChild(ob);bind2(ob);}else if(oa)a.removeChild(oa);}
   for(let i=0;i<bc.length;i++){
    if(!ac[i])a.appendChild(bc[i]),bind2(bc[i]);
    else if(ac[i].nodeType!==bc[i].nodeType||ac[i].nodeName!==bc[i].nodeName){a.replaceChild(bc[i],ac[i]);bind2(bc[i]);}
