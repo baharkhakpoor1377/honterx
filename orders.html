@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
+<title>Høntérx Orders</title>
+<style>
+:root{--bg:#f3f4f7;--card:#fff;--fg:#14161c;--mut:#667;--line:rgba(20,22,28,.12);--acc:#14161c;--accfg:#fff;--ok:#117a43;--okbg:#e2f5ea;--warn:#8a5a00;--warnbg:#fff1d6;--bad:#a32121;--badbg:#fde4e4;--blue:#1d4fa3;--bluebg:#e3ecfb}
+@media (prefers-color-scheme:dark){:root{--bg:#101116;--card:#191b22;--fg:#eef0f5;--mut:#9aa0ae;--line:rgba(255,255,255,.14);--acc:#eef0f5;--accfg:#101116;--ok:#6fe0a2;--okbg:#12301f;--warn:#ffd27a;--warnbg:#3a2c0b;--bad:#ff9b9b;--badbg:#3b1616;--blue:#9dbcf5;--bluebg:#15233f}}
+[hidden]{display:none!important}*{box-sizing:border-box}html,body{margin:0}body{background:var(--bg);color:var(--fg);font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;padding-block:28px 60px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:1000px;margin:0 auto}
+h1{margin:0;font-size:26px;letter-spacing:-.02em}.sub{color:var(--mut);margin:4px 0 20px}
+.bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:18px}
+input[type=password],input[type=search]{font:inherit;color:var(--fg);background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;min-width:0}
+input[type=search]{flex:1 1 220px}
+button{font:inherit;cursor:pointer;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--fg);padding:9px 14px;font-weight:600}
+button.pri{background:var(--acc);color:var(--accfg);border-color:var(--acc)}button:disabled{opacity:.5;cursor:default}
+.tabs{display:flex;flex-wrap:wrap;gap:8px}.tabs button[aria-pressed=true]{background:var(--acc);color:var(--accfg);border-color:var(--acc)}
+.login{max-width:420px;margin:12vh auto 0;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:26px;display:flex;flex-direction:column;gap:12px}
+.err{color:var(--bad);min-height:1.3em;margin:0}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:18px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px}.stat b{display:block;font-size:22px;letter-spacing:-.01em}.stat span{color:var(--mut);font-size:13px}
+.order{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;margin-bottom:14px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px 24px}
+.order header{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;justify-content:space-between}
+.when{font-weight:700}.oid{color:var(--mut);font-size:12px;font-family:ui-monospace,Menlo,monospace}
+.chips{display:flex;gap:6px;flex-wrap:wrap}.chip{font-size:12px;font-weight:700;padding:3px 10px;border-radius:999px}
+.c-ok{background:var(--okbg);color:var(--ok)}.c-warn{background:var(--warnbg);color:var(--warn)}.c-bad{background:var(--badbg);color:var(--bad)}.c-blue{background:var(--bluebg);color:var(--blue)}
+h3{margin:0 0 6px;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--mut)}
+.col{min-width:0}.col p{margin:0}.addr{white-space:pre-line;font-weight:600}
+table{width:100%;border-collapse:collapse}td{padding:5px 0;border-bottom:1px solid var(--line);vertical-align:top}td:last-child{text-align:right;white-space:nowrap;padding-left:10px}
+.size{display:inline-block;margin-left:6px;padding:1px 8px;border-radius:6px;background:var(--bg);border:1px solid var(--line);font-weight:700;font-size:13px}
+.acts{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between}.acts .l{display:flex;gap:8px;flex-wrap:wrap}
+.total{font-weight:800;font-size:17px}
+.empty{text-align:center;color:var(--mut);padding:50px 0}
+a{color:inherit}
+@media (max-width:640px){.order{grid-template-columns:minmax(0,1fr)}}
+@media print{body{background:#fff;color:#000;padding:0}.bar,.stats,.acts,.login,.tabs{display:none!important}.order{break-inside:avoid;border:1px solid #999}}
+</style></head><body><div class="wrap">
+<div id="login" class="login"><h1>Høntérx Orders</h1><p class="sub" style="margin:0">Enter your orders password to see who bought what.</p>
+<input id="pw" type="password" placeholder="Orders password" autocomplete="current-password"><button id="go" class="pri">Open orders</button><p id="lerr" class="err" role="alert"></p></div>
+<div id="app" hidden>
+<h1>Orders</h1><p class="sub" id="sub"></p>
+<div class="stats" id="stats"></div>
+<div class="bar"><div class="tabs" id="tabs"></div><input id="q" type="search" placeholder="Search name, email, city, item…"><button id="refresh">Refresh</button><button id="csv">Download CSV</button></div>
+<div id="list"></div></div></div>
+<script>
+(function(){
+var $=function(i){return document.getElementById(i)},PW='',ORDERS=[],FILTER='ship';
+try{PW=sessionStorage.getItem('hxo')||''}catch(e){}
+function post(b){b.password=PW;return fetch('/api/orders',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)}).then(function(r){return r.json().then(function(d){if(!r.ok)throw new Error(d.error||'Something went wrong');return d})})}
+function el(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e}
+function money(o){return new Intl.NumberFormat('en-CA',{style:'currency',currency:o.currency||'CAD'}).format(o.total)+' '+(o.currency||'')}
+function when(ms){return new Date(ms).toLocaleString('en-CA',{timeZone:'America/Toronto',weekday:'short',year:'numeric',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})}
+function addrText(o){var a=o.address,l=[o.name,a.line1,a.line2,[a.city,a.state,a.postal_code].filter(Boolean).join(' '),a.country].filter(Boolean);return l.join('\n')}
+function copy(t,btn){var done=function(){var o=btn.textContent;btn.textContent='Copied';setTimeout(function(){btn.textContent=o},1200)};try{navigator.clipboard.writeText(t).then(done,function(){fallback()})}catch(e){fallback()}function fallback(){var ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');done()}catch(e){}ta.remove()}}
+function show(){
+  var q=$('q').value.trim().toLowerCase();
+  var rows=ORDERS.filter(function(o){
+    if(FILTER==='ship'&&!(o.paid&&!o.shipped))return false;
+    if(FILTER==='shipped'&&!o.shipped)return false;
+    if(FILTER==='unpaid'&&o.paid)return false;
+    if(!q)return true;
+    var h=[o.name,o.email,o.phone,addrText(o),o.items.map(function(i){return i.name+' '+i.size}).join(' ')].join(' ').toLowerCase();return h.indexOf(q)>=0});
+  var L=$('list');L.textContent='';
+  if(!rows.length){L.appendChild(el('div','empty',ORDERS.length?'No orders match this view.':'No orders yet. They will show up here as soon as someone pays.'));return}
+  rows.forEach(function(o){
+    var c=el('article','order'),h=el('header'),lw=el('div');lw.appendChild(el('div','when',when(o.created)));lw.appendChild(el('div','oid',o.id.slice(0,24)+'…'));h.appendChild(lw);
+    var ch=el('div','chips');ch.appendChild(el('span','chip '+(o.paid?'c-ok':'c-bad'),o.paid?'Paid':'Not paid'));ch.appendChild(el('span','chip '+(o.shipped?'c-blue':(o.paid?'c-warn':'c-bad')),o.shipped?'Shipped':(o.paid?'To ship':'Hold')));h.appendChild(ch);c.appendChild(h);
+    var a=el('div','col');a.appendChild(el('h3',0,'Ship to'));a.appendChild(el('p','addr',addrText(o)||'No address'));
+    var ct=el('div','col');ct.appendChild(el('h3',0,'Contact'));ct.appendChild(el('p',0,o.email||'No email'));ct.appendChild(el('p',0,o.phone||'No phone'));
+    var w=el('div');w.style.display='contents';
+    var l=el('div','col');l.style.gridColumn='1/-1';l.appendChild(el('h3',0,'Items'));var t=document.createElement('table');
+    o.items.forEach(function(i){var r=t.insertRow(),d=r.insertCell();d.appendChild(document.createTextNode(i.name));if(i.size)d.appendChild(el('span','size','Size '+i.size));r.insertCell().textContent='× '+i.qty});
+    var tr=t.insertRow(),td=tr.insertCell();td.appendChild(el('span','total','Total paid'));var tt=tr.insertCell();tt.appendChild(el('span','total',money(o)));l.appendChild(t);
+    c.appendChild(a);c.appendChild(ct);c.appendChild(l);
+    var ac=el('div','acts'),lf=el('div','l');
+    var cb=el('button',0,'Copy address');cb.onclick=function(){copy(addrText(o),cb)};lf.appendChild(cb);
+    var pb=el('button',0,'Print this order');pb.onclick=function(){document.querySelectorAll('.order').forEach(function(n){n.style.display=n===c?'':'none'});window.print();setTimeout(function(){document.querySelectorAll('.order').forEach(function(n){n.style.display=''})},300)};lf.appendChild(pb);
+    ac.appendChild(lf);
+    if(o.paid&&o.pi){var sb=el('button',o.shipped?'':'pri',o.shipped?'Undo shipped':'Mark as shipped');sb.onclick=function(){sb.disabled=true;post({action:'ship',pi:o.pi,shipped:!o.shipped}).then(function(){o.shipped=!o.shipped;stats();show()}).catch(function(e){alert(e.message);sb.disabled=false})};ac.appendChild(sb)}
+    c.appendChild(ac);L.appendChild(c)})}
+function stats(){
+  var paid=ORDERS.filter(function(o){return o.paid}),ts=paid.filter(function(o){return !o.shipped}),rev={};paid.forEach(function(o){rev[o.currency]=(rev[o.currency]||0)+o.total});
+  var S=$('stats');S.textContent='';[[ts.length,'To ship'],[paid.length-ts.length,'Shipped'],[paid.length,'Paid orders'],[Object.keys(rev).map(function(k){return new Intl.NumberFormat('en-CA',{style:'currency',currency:k}).format(rev[k])+' '+k}).join(' · ')||'$0','Sales']].forEach(function(x){var s=el('div','stat'),b=el('b',0,String(x[0]));s.appendChild(b);s.appendChild(el('span',0,x[1]));S.appendChild(s)});
+  var T=$('tabs');T.textContent='';[['ship','To ship'],['shipped','Shipped'],['unpaid','Not paid'],['all','All']].forEach(function(x){var b=el('button',0,x[1]);b.setAttribute('aria-pressed',FILTER===x[0]);b.onclick=function(){FILTER=x[0];stats();show()};T.appendChild(b)})}
+function load(){return post({}).then(function(d){ORDERS=d.orders||[];$('login').hidden=true;$('app').hidden=false;$('sub').textContent='Latest 100 checkouts, newest first. Times are Toronto time. Updated '+new Date().toLocaleTimeString('en-CA',{hour:'numeric',minute:'2-digit'});stats();show()})}
+$('go').onclick=function(){PW=$('pw').value;$('lerr').textContent='';$('go').disabled=true;load().then(function(){try{sessionStorage.setItem('hxo',PW)}catch(e){}}).catch(function(e){$('lerr').textContent=e.message;PW=''}).then(function(){$('go').disabled=false})};
+$('pw').addEventListener('keydown',function(e){if(e.key==='Enter')$('go').click()});
+$('q').oninput=show;$('refresh').onclick=function(){$('refresh').disabled=true;load().catch(function(e){alert(e.message)}).then(function(){$('refresh').disabled=false})};
+$('csv').onclick=function(){var r=[['Date (Toronto)','Order','Paid','Shipped','Name','Email','Phone','Address 1','Address 2','City','Province/State','Postal/ZIP','Country','Item','Size','Qty','Order total','Currency']];
+  ORDERS.forEach(function(o){var a=o.address;(o.items.length?o.items:[{name:'',size:'',qty:''}]).forEach(function(i){r.push([when(o.created),o.id,o.paid?'yes':'no',o.shipped?'yes':'no',o.name,o.email,o.phone,a.line1,a.line2,a.city,a.state,a.postal_code,a.country,i.name,i.size,i.qty,o.total,o.currency])})});
+  var csv=r.map(function(x){return x.map(function(v){v=String(v==null?'':v);if(/^[=+\-@]/.test(v))v="'"+v;return '"'+v.replace(/"/g,'""')+'"'}).join(',')}).join('\r\n');
+  var b=new Blob(['﻿'+csv],{type:'text/csv'}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download='honterx-orders.csv';document.body.appendChild(a);a.click();a.remove()};
+if(PW){$('pw').value=PW;load().catch(function(){PW='';try{sessionStorage.removeItem('hxo')}catch(e){}})}
+})();
+</script></body></html>
