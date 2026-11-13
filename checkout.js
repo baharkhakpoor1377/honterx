@@ -62,6 +62,11 @@ const CATALOG = {
     "tone": "Black",
     "price": 65.0
   },
+  "xt4": {
+    "name": "TS4 Tee",
+    "tone": "White",
+    "price": 65.0
+  },
   "xa1": {
     "name": "CS1 Dad Cap",
     "tone": "Navy",
