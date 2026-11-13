@@ -67,6 +67,31 @@ const CATALOG = {
     "tone": "White",
     "price": 65.0
   },
+  "xt5": {
+    "name": "TS5 Tee",
+    "tone": "White",
+    "price": 65.0
+  },
+  "xt6": {
+    "name": "TS6 Tee",
+    "tone": "White",
+    "price": 65.0
+  },
+  "xt7": {
+    "name": "TS7 Tee",
+    "tone": "White",
+    "price": 65.0
+  },
+  "xt8": {
+    "name": "TS8 Tee",
+    "tone": "French Navy",
+    "price": 65.0
+  },
+  "xt9": {
+    "name": "TS9 Tee",
+    "tone": "White",
+    "price": 65.0
+  },
   "xa1": {
     "name": "CS1 Dad Cap",
     "tone": "Navy",
