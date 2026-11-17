@@ -102,6 +102,36 @@ const CATALOG = {
     "tone": "Black",
     "price": 65.0
   },
+  "xt11": {
+    "name": "TS11 Tee",
+    "tone": "White",
+    "price": 65.0
+  },
+  "xt12": {
+    "name": "TS12 Tee",
+    "tone": "White",
+    "price": 65.0
+  },
+  "xt13": {
+    "name": "TS13 Tee",
+    "tone": "White",
+    "price": 65.0
+  },
+  "xt14": {
+    "name": "TS14 Tee",
+    "tone": "White",
+    "price": 65.0
+  },
+  "xt15": {
+    "name": "TS15 Tee",
+    "tone": "White",
+    "price": 65.0
+  },
+  "xh11": {
+    "name": "S13 Hoodie",
+    "tone": "Carolina Blue",
+    "price": 89.99
+  },
   "xa1": {
     "name": "CS1 Dad Cap",
     "tone": "Navy",
