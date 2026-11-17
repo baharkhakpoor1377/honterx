@@ -77,30 +77,15 @@ const CATALOG = {
     "tone": "White",
     "price": 65.0
   },
-  "xt7": {
-    "name": "TS7 Tee",
-    "tone": "White",
-    "price": 65.0
-  },
   "xt8": {
     "name": "TS8 Tee",
     "tone": "French Navy",
-    "price": 65.0
-  },
-  "xt9": {
-    "name": "TS9 Tee",
-    "tone": "White",
     "price": 65.0
   },
   "xh10": {
     "name": "S12 Hoodie",
     "tone": "Black",
     "price": 89.99
-  },
-  "xt10": {
-    "name": "TS10 Tee",
-    "tone": "Black",
-    "price": 65.0
   },
   "xt11": {
     "name": "TS11 Tee",
@@ -119,11 +104,6 @@ const CATALOG = {
   },
   "xt14": {
     "name": "TS14 Tee",
-    "tone": "White",
-    "price": 65.0
-  },
-  "xt15": {
-    "name": "TS15 Tee",
     "tone": "White",
     "price": 65.0
   },
