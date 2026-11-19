@@ -206,6 +206,11 @@ const CATALOG = {
 const SIZES = ['S', 'M', 'L', 'XL', '2XL', '3XL', 'One size'];
 
 module.exports = async (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Cache-Control', 'no-store');
+  if (req.method === 'OPTIONS') return res.status(204).end();
   if (req.method !== 'POST') { res.setHeader('Allow', 'POST'); return res.status(405).json({ error: 'Method not allowed' }); }
   const key = process.env.STRIPE_SECRET_KEY;
   if (!key) return res.status(500).json({ error: 'Checkout is not set up yet.' });
@@ -215,10 +220,12 @@ module.exports = async (req, res) => {
     const items = Array.isArray(body.items) ? body.items.slice(0, 30) : [];
     const params = new URLSearchParams();
     let n = 0;
+    const unknown = [];
     for (const it of items) {
       const p = CATALOG[it.id];
       const qty = Math.floor(Number(it.qty));
-      if (!p || !(qty >= 1 && qty <= 10)) continue;
+      if (!p) { unknown.push(String(it.name || it.id)); continue; }
+      if (!(qty >= 1 && qty <= 10)) continue;
       const size = SIZES.includes(it.size) ? it.size : 'One size';
       params.append(`line_items[${n}][quantity]`, String(qty));
       params.append(`line_items[${n}][price_data][currency]`, currency);
@@ -229,8 +236,10 @@ module.exports = async (req, res) => {
       params.append(`line_items[${n}][price_data][product_data][metadata][size]`, size);
       n++;
     }
+    if (unknown.length) return res.status(400).json({ error: 'Some items in your bag are no longer available (' + unknown.join(', ') + '). Please remove them and try again.' });
     if (!n) return res.status(400).json({ error: 'Your bag is empty.' });
-    const origin = `https://${req.headers.host}`;
+    const host = String(req.headers['x-forwarded-host'] || req.headers.host || '').split(',')[0].trim();
+    const origin = `https://${host}`;
     params.append('mode', 'payment');
     params.append('success_url', `${origin}/?paid=1`);
     params.append('cancel_url', `${origin}/`);
@@ -245,9 +254,14 @@ module.exports = async (req, res) => {
       body: params
     });
     const d = await r.json();
-    if (!r.ok || !d.url) return res.status(502).json({ error: 'Could not start checkout. Please try again.' });
+    if (!r.ok || !d.url) {
+      const why = d && d.error && d.error.message ? String(d.error.message) : '';
+      console.error('Stripe checkout error', r.status, why);
+      return res.status(502).json({ error: 'Could not start checkout. Please try again.' + (why ? ' (' + why.slice(0, 140) + ')' : '') });
+    }
     return res.status(200).json({ url: d.url });
   } catch (e) {
+    console.error('Checkout exception', e && e.message);
     return res.status(500).json({ error: 'Something went wrong. Please try again.' });
   }
 };
