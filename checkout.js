@@ -107,6 +107,76 @@ const CATALOG = {
     "tone": "White",
     "price": 65.0
   },
+  "xh12": {
+    "name": "S14 Hoodie",
+    "tone": "Bottle Green / Green Paw",
+    "price": 89.99
+  },
+  "xh13": {
+    "name": "S15 Hoodie",
+    "tone": "Charcoal Melange / Gold Paw",
+    "price": 89.99
+  },
+  "xh14": {
+    "name": "S16 Hoodie",
+    "tone": "Burgundy / White Paw",
+    "price": 89.99
+  },
+  "xh15": {
+    "name": "S17 Hoodie",
+    "tone": "Black / Green Paw",
+    "price": 89.99
+  },
+  "xh16": {
+    "name": "S18 Hoodie",
+    "tone": "Black / Dark Red Paw",
+    "price": 89.99
+  },
+  "xh17": {
+    "name": "S19 Hoodie",
+    "tone": "Black / Red Paw",
+    "price": 89.99
+  },
+  "xh18": {
+    "name": "S20 Hoodie",
+    "tone": "White / Tan Paw",
+    "price": 89.99
+  },
+  "xh19": {
+    "name": "S21 Hoodie",
+    "tone": "White / Multicolor Paw",
+    "price": 89.99
+  },
+  "xh20": {
+    "name": "S22 Hoodie",
+    "tone": "Latte",
+    "price": 89.99
+  },
+  "xh21": {
+    "name": "S23 Hoodie",
+    "tone": "Navy Blazer",
+    "price": 89.99
+  },
+  "xh22": {
+    "name": "S24 Hoodie",
+    "tone": "Team Royal / Light Blue Paw",
+    "price": 89.99
+  },
+  "xh23": {
+    "name": "S25 Hoodie",
+    "tone": "Team Royal / Yellow Paw",
+    "price": 89.99
+  },
+  "xh24": {
+    "name": "S26 Hoodie",
+    "tone": "Military Green",
+    "price": 89.99
+  },
+  "xh25": {
+    "name": "S27 Hoodie",
+    "tone": "Sky Blue",
+    "price": 89.99
+  },
   "xh11": {
     "name": "S13 Hoodie",
     "tone": "Carolina Blue",
