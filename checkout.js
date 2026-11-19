@@ -205,6 +205,7 @@ const CATALOG = {
 };
 const SIZES = ['S', 'M', 'L', 'XL', '2XL', '3XL', 'One size'];
 
+const SHIP_COUNTRIES = ["CA", "MX", "US", "AG", "AI", "AW", "BB", "BL", "BM", "BQ", "BS", "BZ", "CR", "CW", "DM", "DO", "GD", "GL", "GP", "GT", "HN", "HT", "JM", "KN", "KY", "LC", "MF", "MQ", "MS", "NI", "PA", "PM", "PR", "SV", "SX", "TC", "TT", "VC", "VG", "AR", "BO", "BR", "BV", "CL", "CO", "EC", "FK", "GF", "GS", "GY", "PE", "PY", "SR", "UY", "VE", "AD", "AL", "AT", "AX", "BA", "BE", "BG", "BY", "CH", "CZ", "DE", "DK", "EE", "ES", "FI", "FO", "FR", "GB", "GG", "GI", "GR", "HR", "HU", "IE", "IM", "IS", "IT", "JE", "LI", "LT", "LU", "LV", "MC", "MD", "ME", "MK", "MT", "NL", "NO", "PL", "PT", "RO", "RS", "RU", "SE", "SI", "SJ", "SK", "SM", "UA", "VA", "AO", "BF", "BI", "BJ", "BW", "CD", "CF", "CG", "CI", "CM", "CV", "DJ", "DZ", "EG", "ER", "ET", "GA", "GH", "GM", "GN", "GQ", "GW", "IO", "KE", "KM", "LR", "LS", "LY", "MA", "MG", "ML", "MR", "MU", "MW", "MZ", "NA", "NE", "NG", "RE", "RW", "SC", "SH", "SL", "SN", "SO", "SS", "ST", "SZ", "TD", "TF", "TG", "TN", "TZ", "UG", "YT", "ZA", "ZM", "ZW", "AE", "AF", "AM", "AZ", "BD", "BH", "BN", "BT", "CN", "CY", "GE", "HK", "ID", "IL", "IN", "IQ", "JO", "KG", "KH", "KR", "KW", "KZ", "LA", "LB", "LK", "MM", "MN", "MO", "MV", "MY", "NP", "OM", "PH", "PK", "QA", "SA", "SG", "TH", "TJ", "TL", "TM", "TR", "TW", "UZ", "VN", "YE", "AU", "CK", "FJ", "GU", "KI", "NC", "NR", "NU", "NZ", "PF", "PG", "PN", "SB", "TK", "TO", "TV", "VU", "WF", "WS"];
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -240,14 +241,23 @@ module.exports = async (req, res) => {
     if (!n) return res.status(400).json({ error: 'Your bag is empty.' });
     const host = String(req.headers['x-forwarded-host'] || req.headers.host || '').split(',')[0].trim();
     const origin = `https://${host}`;
+    // Checkout Studio settings (fixed): see STRIPE_INTEGRATION_TODO.md
+    params.append('ui_mode', 'hosted_page');
     params.append('mode', 'payment');
     params.append('success_url', `${origin}/?paid=1`);
     params.append('cancel_url', `${origin}/`);
-    params.append('shipping_address_collection[allowed_countries][0]', 'CA');
-    params.append('shipping_address_collection[allowed_countries][1]', 'US');
+    params.append('billing_address_collection', 'required');
     params.append('phone_number_collection[enabled]', 'true');
-    const email = String(body.email || '').trim();
-    if (/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) params.append('customer_email', email);
+    params.append('automatic_tax[enabled]', 'true');
+    params.append('allow_promotion_codes', 'true');
+    params.append('submit_type', 'auto');
+    params.append('tax_id_collection[enabled]', 'true');
+    params.append('tax_id_collection[required]', 'if_supported');
+    SHIP_COUNTRIES.forEach((c, i) => params.append(`shipping_address_collection[allowed_countries][${i}]`, c));
+    params.append('consent_collection[terms_of_service]', 'required');
+    params.append('custom_text[terms_of_service_acceptance][message]', 'ALL SALES ARE FINAL. I understand there are no refunds or exchanges in some cases store credit may be applied to my profile');
+    params.append('integration_identifier', 'hosted_web_0001');
+    params.append('origin_context', 'web');
     const r = await fetch('https://api.stripe.com/v1/checkout/sessions', {
       method: 'POST',
       headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/x-www-form-urlencoded' },
